@@ -1,0 +1,141 @@
+
+----------------1.souce code clone------------------
+To get started, git clone the latest Tengine repository.
+  $ git clone https://github.com/OAID/tengine/
+
+
+----------------2.pre env installation------------------
+# For loading caffe model or tensorflow model
+# However, recommend to use another way to install by source code 
+  $ sudo apt install libprotobuf-dev protobuf-compiler
+
+# For image preprocessing in test samples
+  $ sudo apt install libopencv-dev
+
+# For caffe/tensorflow wrapper
+  $ sudo apt install libboost-all-dev libgoogle-glog-dev
+
+
+# Copy config example file makefile.config.example
+  $ cd ~/tengine
+  $ cp makefile.config.example makefile.config
+
+
+
+----------------3.OpenBLAS installation------------------
+# install OpenBLAS
+# method 1(installed sucessfully)
+  $ sudo apt-get install libopenblas-dev
+# method 2(compiling way, not used)
+  $ git clone https://github.com/xianyi/OpenBLAS.git
+  $ cd OpenBLAS
+  $ make -j8
+  $ sudo make PREFIX=/usr/local/OpenBLAS install
+
+
+
+----------------4.Protobuf installation------------------
+# Install Protobuf 3.0.0
+# Link: https://github.com/OAID/Tengine/wiki/%E5%A6%82%E4%BD%95%E5%AE%89%E8%A3%85-protobuf-3.0.0%EF%BC%9F
+  
+  # how to install protobuf 3.0? If you already installed other versions, remove them first:
+  $ sudo apt-get autoremove libprotobuf-dev protobuf-compiler
+  
+  # To install protobuf from src, you need to install:
+  $ sudo apt-get install autoconf automake libtool
+
+  # download source code:
+  $ wget https://github.com/protocolbuffers/protobuf/archive/v3.0.0.zip -O protobuf-3.0.0.zip
+
+  # unzip:
+  $ unzip protobuf-3.0.0.zip
+  $ cd protobuf-3.0.0
+
+
+## ------because the link of google-mock is invalid now, edit autogen.sh and modify
+
+if test ! -e gmock; then
+  echo "Google Mock not present.  Fetching gmock-1.7.0 from the web..."
+  curl $curlopts -O https://googlemock.googlecode.com/files/gmock-1.7.0.zip
+  unzip -q gmock-1.7.0.zip
+  rm gmock-1.7.0.zip
+  mv gmock-1.7.0 gmock
+fi
+
+to
+
+if test ! -e gmock; then
+  echo "Google Mock not present.  Fetching gmock-1.7.0 from the web..."
+  curl -o gmock-1.7.0.zip https://codeload.github.com/google/googletest/zip/release-1.7.0
+  unzip -q -d gmock gmock-1.7.0.zip
+  rm gmock-1.7.0.zip
+fi
+
+## ------because the link of google-mock is invalid now, edit autogen.sh and modify
+
+If it fails, pls download googletest zip file from:
+   https://codeload.github.com/google/googletest/zip/release-1.7.0
+Then unzip it, modify the unpacked name to gmock
+Put it into tengine directory
+
+# configure & make:
+  $ ./autogen.sh
+  $ ./configure
+  $ make # (--prefix=/usr) # no need after test
+  $ make install
+
+# set env variable:
+  $ echo "export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/usr/local/lib" >> ~/.profile
+  $ source ~/.profile
+# check version
+  $ protoc --version 3.0.0
+
+
+----------------5.Edit makefile.config------------------
+# Edit makefile.config
+ARCH
+    By default, CONFIG_ARCH_ARM64 option is valid.
+    if you want to run Tengine on ARM32 or X86 system, you can run the openblas branch by comment CONFIG_ARCH_ARM64, and enable CONFIG_ARCH_BLAS=y
+	#CONFIG_ARCH_ARM64=y
+        CONFIG_ARCH_BLAS=y
+
+ACL GPU
+    By default, ACL GPU option is invalid. Support ACL GPU need uncomment CONFIG_ACL_GPU=y and set ACL_ROOT
+     CONFIG_ACL_GPU=y
+     ACL_ROOT = /home/firefly/ComputeLibrary(your ACL root)
+
+Serializer
+    By default, caffe / tengine serializer, option is valid .
+    If you want to support mxnet, onnx, tensorflow, uncomment options
+     CONFIG_CAFFE_SERIALIZER=y
+     # CONFIG_MXNET_SERIALIZER=y
+     # CONFIG_ONNX_SERIALIZER=y
+     # CONFIG_TF_SERIALIZER=y
+     CONFIG_TENGINE_SERIALIZER=y
+
+Wrapper
+    By default, wrapper option is invalid. if want to use caffe/tensorflow wrapper, uncomment CONFIG_FRAMEWORK_WRAPPER=y
+    CONFIG_FRAMEWORK_WRAPPER=y
+
+----------------5.Build & Run Demo------------------
+# Build
+cd ~/tengine
+make -j4
+
+
+# Run demo
+
+# run squeezenet
+  $ cd ~/tengine
+  $ ./build/tests/bin/bench_sqz
+
+# Run MobileNet
+  $ cd ~/tengine
+  $ ./build/tests/bin/bench_mobilenet
+
+
+
+
+
+
+
